@@ -411,7 +411,7 @@ el("facilityForm").addEventListener("submit", async e => {
         await loadOptions();
         await loadFacilities();
         map.setView([saved.lat, saved.lng], 16);
-        if (markers[saved.id]) markers[saved.id].openPopup();
+        if (markers[saved.id]) setTimeout(() => markers[saved.id].openPopup(), 400);
     } catch (err) {
         if (err.status === 401) {
             token = null;
