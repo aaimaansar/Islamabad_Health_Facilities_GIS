@@ -1,0 +1,16 @@
+{
+  "name": "islamabad-health-facilities-gis",
+  "version": "1.0.0",
+  "description": "Web GIS for health facilities in Islamabad using PostgreSQL/PostGIS, Node.js, Express and Leaflet",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "Aaima Ansar",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "pg": "^8.13.1"
+  }
+}

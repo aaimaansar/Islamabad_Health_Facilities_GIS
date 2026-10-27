@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamabad Health Facilities GIS</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header class="topbar">
+        <div>
+            <h1>Islamabad Health Facilities GIS</h1>
+            <p>Hospitals, clinics, labs and dispensaries stored in a PostgreSQL / PostGIS database</p>
+        </div>
+        <div class="login-area">
+            <span id="loginState">Viewing as guest</span>
+            <button id="logoutButton" type="button" class="small hidden">Log out</button>
+        </div>
+    </header>
+
+    <main class="layout">
+        <aside class="sidebar">
+            <section class="panel">
+                <h2>Search and filter</h2>
+
+                <label for="searchInput">Name or specialty</label>
+                <input type="search" id="searchInput" placeholder="e.g. PIMS, eye, dental">
+
+                <label for="typeFilter">Facility type</label>
+                <select id="typeFilter">
+                    <option value="">All types</option>
+                </select>
+
+                <label for="sectorFilter">Sector</label>
+                <select id="sectorFilter">
+                    <option value="">All sectors</option>
+                </select>
+
+                <label for="ownershipFilter">Ownership</label>
+                <select id="ownershipFilter">
+                    <option value="">All</option>
+                </select>
+
+                <label for="emergencyFilter">24 hour emergency</label>
+                <select id="emergencyFilter">
+                    <option value="">Any</option>
+                    <option value="yes">Yes</option>
+                    <option value="no">No</option>
+                </select>
+
+                <div class="row">
+                    <button id="clearFilters" type="button" class="secondary">Clear filters</button>
+                </div>
+            </section>
+
+            <section class="panel">
+                <h2>Results</h2>
+                <p id="resultCount" class="muted">Loading...</p>
+                <ul id="facilityList" class="facility-list"></ul>
+            </section>
+
+            <section class="panel" id="loginPanel">
+                <h2>Editor login</h2>
+                <p class="muted">Only editors can add or change records.</p>
+                <form id="loginForm">
+                    <label for="passwordInput">Password</label>
+                    <input type="password" id="passwordInput" autocomplete="current-password">
+                    <p id="loginError" class="error"></p>
+                    <button type="submit">Log in</button>
+                </form>
+            </section>
+        </aside>
+
+        <section class="map-area">
+            <p id="message" class="message hidden" role="status"></p>
+            <div id="map"></div>
+            <p class="map-note">
+                Click anywhere on the map to see facilities within 2 km of that point.
+            </p>
+
+            <section class="panel hidden" id="editorPanel">
+                <div class="editor-head">
+                    <h2 id="formTitle">Add a new facility</h2>
+                    <button id="newButton" type="button" class="secondary small">New record</button>
+                </div>
+                <p class="muted" id="formHint">
+                    Fill in the form and click on the map to set the location.
+                </p>
+
+                <form id="facilityForm" novalidate>
+                    <input type="hidden" id="facilityId">
+
+                    <div class="form-grid">
+                        <div class="field wide">
+                            <label for="f_name">Facility name *</label>
+                            <input id="f_name" maxlength="120">
+                            <small class="error" data-for="name"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_type">Type *</label>
+                            <select id="f_type"><option value="">Select</option></select>
+                            <small class="error" data-for="facility_type"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_specialty">Specialty</label>
+                            <input id="f_specialty" maxlength="40" placeholder="General">
+                            <small class="error" data-for="specialty"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_sector">Sector *</label>
+                            <input id="f_sector" list="sectorList" maxlength="30" placeholder="e.g. G-8">
+                            <datalist id="sectorList"></datalist>
+                            <small class="error" data-for="sector"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_ownership">Ownership *</label>
+                            <select id="f_ownership"><option value="">Select</option></select>
+                            <small class="error" data-for="ownership"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_emergency">24 hour emergency</label>
+                            <select id="f_emergency">
+                                <option value="no">No</option>
+                                <option value="yes">Yes</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="f_status">Status</label>
+                            <select id="f_status"></select>
+                            <small class="error" data-for="status"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_source">Data source</label>
+                            <select id="f_source"></select>
+                            <small class="error" data-for="data_source"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_phone">Phone</label>
+                            <input id="f_phone" maxlength="20" placeholder="051-1234567">
+                            <small class="error" data-for="phone"></small>
+                        </div>
+                        <div class="field">
+                            <label for="f_lat">Latitude *</label>
+                            <input id="f_lat" inputmode="decimal">
+                        </div>
+                        <div class="field">
+                            <label for="f_lng">Longitude *</label>
+                            <input id="f_lng" inputmode="decimal">
+                            <small class="error" data-for="location"></small>
+                        </div>
+                        <div class="field wide">
+                            <label for="f_remarks">Remarks</label>
+                            <textarea id="f_remarks" rows="2" maxlength="300"></textarea>
+                            <small class="error" data-for="remarks"></small>
+                        </div>
+                    </div>
+
+                    <p id="formError" class="error"></p>
+
+                    <div class="row">
+                        <button type="submit" id="saveButton">Save record</button>
+                        <button type="button" id="deleteButton" class="danger hidden">Delete</button>
+                    </div>
+                </form>
+            </section>
+        </section>
+    </main>
+
+    <footer>
+        Web GIS Application, Lab Assignment 2 | Aaima Ansar (FA23-BRG-005) |
+        Base data from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
